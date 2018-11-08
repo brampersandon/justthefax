@@ -1,9 +1,19 @@
 import React from 'react'
+import getConfig from 'next/config'
 
 import { Provider,  Client, Connect, query, mutation } from 'urql'
 
+const { publicRuntimeConfig } = getConfig() 
+const { API_KEY } = publicRuntimeConfig
+
 const client = new Client({
-    url: "http://localhost:4000/graphql"
+    url: "http://localhost:4000/graphql",
+    fetchOptions: {
+        headers: {
+            'authorization': `Bearer ${API_KEY}`,
+            'content-type': 'application/json'
+        }
+    }
 })
 
 const Centerer = (props) => (
@@ -60,19 +70,12 @@ mutation($from: String, $to: String, $media_url: String) {
 
 const Faxes = () => (
     <Connect query={(query(GetFaxes))} mutation={{ sendFax: mutation(SendFax) }} children={({loaded, fetching, refetch, data, error, sendFax}) => {
-        if (!data || fetching) return <p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[modem noises]]]]]]]]]]]]]]]]]</p>
-        console.log({data, fetching, loaded})
-        if (data && fetching) return (
-            <React.Fragment>
-                <FaxList data={data} refetch={refetch} />
-                <p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[fax in progress... more modem noises]]]]]]]]]]]]]]]]]</p>
-            </React.Fragment>
-        )
-        if (loaded && error) return <p style={{textAlign: 'center'}}>a bad thing happened, be sad!</p>
         return (
             <React.Fragment>
-                <FaxList data={data} refetch={refetch} />
-                <FaxForm onSubmit={sendFax}/>
+                {fetching && <p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[modem noises]]]]]]]]]]]]]]]]]</p>}
+                {error && <p style={{textAlign: 'center'}}>a bad thing happened, be sad!</p>}
+                {data && <FaxList data={data} refetch={refetch} />}
+                {loaded && <FaxForm onSubmit={sendFax}/>}
             </React.Fragment>
         )
     }}/>
@@ -85,11 +88,15 @@ const FaxList = ({data, refetch}) => (
             <button onClick={() => refetch({ skipCache: true })}>reload</button>
         </div>
         <ul>
-            {data && data.getFaxes && data.getFaxes.map((f) => (
-                <li key={f.sid}>
-                        from: {f.from} to: {f.to} <a href={f.media_url} target="_blank" rel="noopener noreferrer">(view)</a>
-                </li>
-            ))}
+            {
+                (data && data.getFaxes)
+                    ? data.getFaxes.map((f) => (
+                        <li key={f.sid}>
+                                from: {f.from} to: {f.to} <a href={f.media_url} target="_blank" rel="noopener noreferrer">(view)</a>
+                        </li>
+                    ))
+                    : <li>no faxes yet...you sure you know what you're doing?</li>
+            }
         </ul>
         <style jsx>{`
             div.fax-list {
@@ -153,10 +160,6 @@ class FaxForm extends React.Component {
                     display: flex;
                     justify-content: space-between;
                     padding: 1rem 0;
-                }
-                button {
-                    padding: 1rem;
-                    margin: 1rem 0 0 0;
                 }
             `}</style>
         </div>

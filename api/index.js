@@ -1,9 +1,11 @@
 const axios = require('axios')
 const querystring = require('querystring')
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, AuthenticationError, gql } = require('apollo-server');
 
 const TWLO_SID = process.env.TWLO_SID || ''
 const TWLO_KEY = process.env.TWLO_KEY || ''
+
+const API_KEY = process.env.API_KEY || false // if no API key is set, deny all requests
 
 const createClient = (sid, key) => {
     const ax =  axios.create({
@@ -73,47 +75,50 @@ const typeDefs = gql`
     sendFax(from: String, to: String, media_url: String): Fax
   }
 
-
 `
 
 const resolvers = {
   Query: {
-    getFaxes: async () => {
+    getFaxes: async (_p, _a, { authorized }) => {
+        if (!authorized) return new AuthenticationError('not authorized')
         try {
             const res = await client.fetchFaxes()
             if (!res.data || !res.data.faxes) return []
             return res.data.faxes
         } catch (e) {
-            console.log(e)
-            return []
+            return e
         }
     },
-    getFax: async (_, {sid}) => {
+    getFax: async (_, {sid}, { authorized }) => {
+        if (!authorized) return new AuthenticationError('not authorized')
         try {
             const res = await client.fetchFax(sid)
             if (!res.data) return null
             return res.data
         } catch (e) {
-            console.log(e)
-            return null
+            return e
         }
     }
   },
   Mutation: {
-      sendFax: async (_, {from, to, media_url}) => {
+      sendFax: async (_, {from, to, media_url},  {authorized}) => {
+        if (!authorized) return new AuthenticationError('not authorized')
         try {
             const res = await client.sendFax(from, to, media_url)
             if (!res.data) return null
             return res.data
         } catch (e) {
-            console.log(e)
-            return null
+            return e
         }
       }
   }
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const context = ({ req }) => {
+    return {authorized: API_KEY && req.headers.authorization && req.headers.authorization.replace('Bearer ', '') === API_KEY}
+}
+
+const server = new ApolloServer({ typeDefs, resolvers, context });
 
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);

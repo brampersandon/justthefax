@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "start": "yarn build && next",
+    "build": "next build",
+    "dev": "next dev"
+  },
   "dependencies": {
     "next": "^7.0.2",
     "react": "^16.6.1",
