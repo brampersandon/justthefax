@@ -114,9 +114,7 @@ const resolvers = {
   }
 };
 
-const context = ({ req }) => {
-    return {authorized: API_KEY && req.headers.authorization && req.headers.authorization.replace('Bearer ', '') === API_KEY}
-}
+const context = ({ req }) => ({authorized: API_KEY && req.headers.authorization && req.headers.authorization.replace('Bearer ', '') === API_KEY})
 
 const server = new ApolloServer({ typeDefs, resolvers, context });
 

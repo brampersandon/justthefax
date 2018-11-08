@@ -9,7 +9,7 @@ Set up your Twilio Account SID, Twilio API key, and desired external API key as 
 ```
 export TWLO_SID='Axxxxxxxxxxxxxxxxxxxx'
 export TWLO_KEY='Axxxxxxxxxxxxxxxxxxxx'
-export API_KEY='my-gibberish-probably-a-uuid-or-something'
+export API_KEY='some-gibberish-probably-a-uuid-or-something'
 ```
 
 ### api
@@ -21,4 +21,5 @@ In the `./api/` directory, you'll find an Apollo Server project. Run `yarn dev` 
 In the `./web/` directory, you'll find a Next.js project. Run `yarn dev` to launch the server on port 3000.
 
 ## a word of caution
-Make sure you're storing your Twilio creds appropriately. This app reads the Twilio API directly, so don't get too hasty.
+
+Pick a solid-ish API key, and consider using a real authentication method (like, something with tokens that expire) rather than the simple thing I cooked up. Doubly so, if you're planning on exposing this to the world. I'm only ever running this locally, so a simple API key like this is pretty reasonable.
