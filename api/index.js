@@ -5,8 +5,6 @@ const { ApolloServer, gql } = require('apollo-server');
 const TWLO_SID = process.env.TWLO_SID || ''
 const TWLO_KEY = process.env.TWLO_KEY || ''
 
-const FROM = process.env.TWLO_FROM || ''
-
 const createClient = (sid, key) => {
     const ax =  axios.create({
         baseURL: 'https://fax.twilio.com',
@@ -72,7 +70,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    sendFax(from: String, to: String, mediaUrl: String): Fax
+    sendFax(from: String, to: String, media_url: String): Fax
   }
 
 
@@ -86,6 +84,7 @@ const resolvers = {
             if (!res.data || !res.data.faxes) return []
             return res.data.faxes
         } catch (e) {
+            console.log(e)
             return []
         }
     },
@@ -95,18 +94,20 @@ const resolvers = {
             if (!res.data) return null
             return res.data
         } catch (e) {
+            console.log(e)
             return null
         }
     }
   },
   Mutation: {
-      sendFax: async (_, {from, to, mediaUrl}) => {
+      sendFax: async (_, {from, to, media_url}) => {
         try {
-            const res = await client.sendFax(from, to, mediaUrl)
-            if (!res.data) return res
+            const res = await client.sendFax(from, to, media_url)
+            if (!res.data) return null
             return res.data
         } catch (e) {
-            return e
+            console.log(e)
+            return null
         }
       }
   }

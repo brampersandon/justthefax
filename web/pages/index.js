@@ -48,8 +48,8 @@ query {
 `
 
 const SendFax = `
-mutation($from: String, $to: String, $mediaUrl: String) {
-    sendFax(from: $from, to: $to, mediaUrl: $mediaUrl) {
+mutation($from: String, $to: String, $media_url: String) {
+    sendFax(from: $from, to: $to, media_url: $media_url) {
         sid
         from
         to
@@ -59,23 +59,33 @@ mutation($from: String, $to: String, $mediaUrl: String) {
 `
 
 const Faxes = () => (
-    <Connect query={(query(GetFaxes))} mutation={{ sendFax: mutation(SendFax) }} children={({loaded, fetching, data, error, sendFax}) => {
-        if (fetching || !data) return <p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[modem noises]]]]]]]]]]]]]]]]]</p>
+    <Connect query={(query(GetFaxes))} mutation={{ sendFax: mutation(SendFax) }} children={({loaded, fetching, refetch, data, error, sendFax}) => {
+        if (!data || fetching) return <p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[modem noises]]]]]]]]]]]]]]]]]</p>
+        console.log({data, fetching, loaded})
+        if (data && fetching) return (
+            <React.Fragment>
+                <FaxList data={data} refetch={refetch} />
+                <p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[fax in progress... more modem noises]]]]]]]]]]]]]]]]]</p>
+            </React.Fragment>
+        )
         if (loaded && error) return <p style={{textAlign: 'center'}}>a bad thing happened, be sad!</p>
         return (
             <React.Fragment>
-                <FaxList data={data} />
+                <FaxList data={data} refetch={refetch} />
                 <FaxForm onSubmit={sendFax}/>
             </React.Fragment>
         )
     }}/>
 )
 
-const FaxList = ({data}) => (
+const FaxList = ({data, refetch}) => (
     <div className="fax-list">
         <h2>recent faxes:</h2>
+        <div className="fax-list--actions">
+            <button onClick={() => refetch({ skipCache: true })}>reload</button>
+        </div>
         <ul>
-            {data.getFaxes.map((f) => (
+            {data && data.getFaxes && data.getFaxes.map((f) => (
                 <li key={f.sid}>
                         from: {f.from} to: {f.to} <a href={f.media_url} target="_blank" rel="noopener noreferrer">(view)</a>
                 </li>
@@ -95,7 +105,7 @@ class FaxForm extends React.Component {
     state = {
         from: '',
         to: '',
-        mediaUrl: ''
+        media_url: ''
     }
 
     handleChange(k, v) {
@@ -115,18 +125,18 @@ class FaxForm extends React.Component {
             <h2>send a fax</h2>
             <p>this form will send <strong>real faxes</strong>, no kidding.</p>
             <div className="innards">
-                <formgroup>
+                <div className="input-group">
                     <label htmlFor="from">from: </label>
                     <input type="text" name="from" id="to" placeholder="from" onChange={(e) => this.handleChange('from', e.target.value)}></input>
-                </formgroup>
-                <formgroup>
+                </div>
+                <div className="input-group">
                     <label htmlFor="to">to: </label>
                     <input type="text" name="to" id="to" placeholder="to" onChange={(e) => this.handleChange('to', e.target.value)}></input>
-                </formgroup>
-                <formgroup>
+                </div>
+                <div className="input-group">
                     <label htmlFor="media_url">media url: </label>
-                    <input type="text" name="media_url" id="media_url" placeholder="media url" onChange={(e) => this.handleChange('mediaUrl', e.target.value)}></input>
-                </formgroup>
+                    <input type="text" name="media_url" id="media_url" placeholder="media url" onChange={(e) => this.handleChange('media_url', e.target.value)}></input>
+                </div>
             </div>
             <div className="actions">
                 <button onClick={() => this.onSubmit()}>commence!</button>
@@ -139,7 +149,7 @@ class FaxForm extends React.Component {
                     display: flex;
                     flex-direction: column;
                 }
-                formgroup {
+                div.input-group {
                     display: flex;
                     justify-content: space-between;
                     padding: 1rem 0;
