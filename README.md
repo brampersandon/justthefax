@@ -24,4 +24,4 @@ In the `./web/` directory, you'll find a Next.js project. Run `yarn dev` to laun
 
 ## a word of caution
 
-Pick a solid-ish API key, and consider using a real authentication method (like, something with tokens that expire) rather than the simple thing I cooked up. Doubly so, if you're planning on exposing this to the world. I'm only ever running this locally, so a simple API key like this is pretty reasonable.
+Pick a solid-ish API key, and consider using a real authentication method (like, something with tokens that expire) rather than the simple thing I cooked up. **You shouldn't expose or deploy this service outside of your local machine without significant, sweeping changes.**
