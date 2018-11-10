@@ -76,7 +76,7 @@ const FaxList = ({data, refetch}) => (
                                 from: {f.from} to: {f.to} <a href={f.media_url} target="_blank" rel="noopener noreferrer">(view)</a>
                         </li>
                     ))
-                    : <li>no faxes yet...you sure you know what you're doing?</li>
+                    : <li>no faxes yet...try sending one?</li>
             }
         </ul>
         <style jsx>{`
