@@ -1,3 +1,4 @@
+# Put your own values here, and rename this file to `.envrc`
 export TWLO_SID='Axxxxxxxxxxxxxxxxxxxx'
 export TWLO_KEY='Axxxxxxxxxxxxxxxxxxxx'
 export API_KEY='some-gibberish-probably-a-uuid-or-something'

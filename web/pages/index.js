@@ -6,6 +6,7 @@ import { Provider,  Client, Connect, query, mutation } from 'urql'
 const { publicRuntimeConfig } = getConfig() 
 const { API_KEY } = publicRuntimeConfig
 
+// URQL GraphQL client initialization
 const client = new Client({
     url: "http://localhost:4000/graphql",
     fetchOptions: {
@@ -16,35 +17,9 @@ const client = new Client({
     }
 })
 
-const Centerer = (props) => (
-    <div id="container">
-        <div className="leftpad"></div>
-        <div className="center">{props.children}</div>
-        <div className="rightpad"></div>
-        <style jsx>{`
-            div#container {
-                display: grid;
-                grid-template-columns: 1fr 4fr 1fr;
-            }
-
-            @media (min-width: 1200px) {
-                div#container {
-                    grid-template-columns: 1fr 1fr 1fr;
-                }
-            }
-        `}</style>
-    </div>
-)
-
-const Header = () => (
-    <h1>just the fax
-        <style jsx>{`
-            h1 {
-                text-align: center;
-            }
-        `}</style>
-    </h1>
-)
+// Common loading/error state components
+const Loading = () => (<p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[modem noises]]]]]]]]]]]]]]]]]</p>)
+const UhOh = () => (<p style={{textAlign: 'center'}}>a bad thing happened, be sad!</p>)
 
 const GetFaxes = `
 query {
@@ -68,19 +43,25 @@ mutation($from: String, $to: String, $media_url: String) {
 }
 `
 
-const Faxes = () => (
-    <Connect query={(query(GetFaxes))} mutation={{ sendFax: mutation(SendFax) }} children={({loaded, fetching, refetch, data, error, sendFax}) => {
-        return (
-            <React.Fragment>
-                {fetching && <p style={{textAlign: 'center'}}>[[[[[[[[[[[[[[[[[modem noises]]]]]]]]]]]]]]]]]</p>}
-                {error && <p style={{textAlign: 'center'}}>a bad thing happened, be sad!</p>}
-                {data && <FaxList data={data} refetch={refetch} />}
-                {loaded && <FaxForm onSubmit={sendFax}/>}
-            </React.Fragment>
-        )
+// URQL containers
+const FaxListContainer = () => (
+    <Connect query={(query(GetFaxes))} children={({loaded, fetching, refetch, data, error}) => {
+        if (fetching) return <Loading />
+        if (error) return <UhOh />
+        if (loaded) return  <FaxList data={data} refetch={refetch} />
+        return <UhOh />
     }}/>
 )
 
+const FaxFormContainer = () => (
+    <Connect mutation={{ sendFax: mutation(SendFax) }} children={({loaded, fetching, error, sendFax}) => {
+        if (fetching) return <Loading />
+        if (error) return <UhOh />
+        return  <FaxForm onSubmit={sendFax}/>
+    }}/>
+)
+
+// Renderings for the aforementioned containers
 const FaxList = ({data, refetch}) => (
     <div className="fax-list">
         <h2>recent faxes:</h2>
@@ -166,6 +147,44 @@ class FaxForm extends React.Component {
         )
     }
 }
+
+// Layout and organizational components
+const Faxes = () => (
+    <React.Fragment>
+        <FaxListContainer />
+        <FaxFormContainer />
+    </React.Fragment>
+)
+
+const Centerer = (props) => (
+    <div id="container">
+        <div className="leftpad"></div>
+        <div className="center">{props.children}</div>
+        <div className="rightpad"></div>
+        <style jsx>{`
+            div#container {
+                display: grid;
+                grid-template-columns: 1fr 4fr 1fr;
+            }
+
+            @media (min-width: 1200px) {
+                div#container {
+                    grid-template-columns: 1fr 1fr 1fr;
+                }
+            }
+        `}</style>
+    </div>
+)
+
+const Header = () => (
+    <h1>just the fax
+        <style jsx>{`
+            h1 {
+                text-align: center;
+            }
+        `}</style>
+    </h1>
+)
 
 export default () => (
     <Provider client={client}>
